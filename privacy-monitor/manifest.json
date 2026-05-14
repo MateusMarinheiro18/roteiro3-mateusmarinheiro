@@ -1,0 +1,58 @@
+{
+  "manifest_version": 2,
+  "name": "Privacy Monitor",
+  "version": "1.0.0",
+  "description": "Detecta e exibe ameaças à privacidade e rastreamento na navegação web.",
+  "author": "Insper - Roteiro 3",
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "cookies",
+    "tabs",
+    "storage",
+    "activeTab",
+    "<all_urls>"
+  ],
+
+  "data_collection_permissions": {
+    "collects_personal_data": false,
+    "data_collection_purpose": "none",
+    "retention_period": "session"
+  },
+
+  "background": {
+    "scripts": ["privacy_monitor.js"],
+    "persistent": true
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Privacy Monitor",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png"
+    }
+  },
+
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "privacy-monitor@insper.edu.br",
+      "strict_min_version": "91.0"
+    }
+  }
+}

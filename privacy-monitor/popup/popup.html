@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="shell">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7l-9-5z" fill="currentColor" opacity="0.15"/>
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7l-9-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+            <path d="M12 9v1M12 14v1M9 12h1M14 12h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="app-name">Privacy Monitor</div>
+          <div class="domain-label" id="domainLabel">—</div>
+        </div>
+      </div>
+      <div class="score-badge" id="scoreBadge">
+        <span class="score-num" id="scoreNum">—</span>
+        <span class="score-grade" id="scoreGrade"></span>
+      </div>
+    </header>
+
+    <!-- Score bar -->
+    <div class="score-bar-wrap">
+      <div class="score-bar-track">
+        <div class="score-bar-fill" id="scoreBarFill"></div>
+      </div>
+      <div class="score-labels">
+        <span>Péssimo</span><span>Ruim</span><span>Regular</span><span>Bom</span><span>Ótimo</span>
+      </div>
+    </div>
+
+    <!-- Breakdown rápido -->
+    <div class="quick-stats" id="quickStats">
+      <div class="stat-pill" id="statThird"><span class="stat-num">—</span><span class="stat-lbl">3ª parte</span></div>
+      <div class="stat-pill" id="statCookies"><span class="stat-num">—</span><span class="stat-lbl">Cookies</span></div>
+      <div class="stat-pill" id="statFp"><span class="stat-num">—</span><span class="stat-lbl">Fingerprint</span></div>
+      <div class="stat-pill" id="statHijack"><span class="stat-num">—</span><span class="stat-lbl">Hijacking</span></div>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="third" role="tab">Terceiros</button>
+      <button class="tab" data-tab="cookies" role="tab">Cookies</button>
+      <button class="tab" data-tab="storage" role="tab">Storage</button>
+      <button class="tab" data-tab="fp" role="tab">Fingerprint</button>
+      <button class="tab" data-tab="hijack" role="tab">Hijacking</button>
+      <button class="tab" data-tab="score" role="tab">Score</button>
+    </nav>
+
+    <!-- Painel de conteúdo -->
+    <div class="panel" id="panel">
+
+      <!-- ── Tab: Terceiros ── -->
+      <div class="tab-panel active" id="tab-third">
+        <div class="section-title">Domínios de Terceira Parte</div>
+        <div id="thirdPartyList" class="list-container">
+          <div class="empty-state">Nenhum dado ainda. Navegue para um site.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Cookies ── -->
+      <div class="tab-panel" id="tab-cookies">
+        <div class="cookie-grid" id="cookieGrid">
+          <div class="cookie-stat-card">
+            <span class="csc-num" id="csc1p">0</span>
+            <span class="csc-lbl">1ª Parte</span>
+          </div>
+          <div class="cookie-stat-card warn">
+            <span class="csc-num" id="csc3p">0</span>
+            <span class="csc-lbl">3ª Parte</span>
+          </div>
+          <div class="cookie-stat-card">
+            <span class="csc-num" id="cscSess">0</span>
+            <span class="csc-lbl">Sessão</span>
+          </div>
+          <div class="cookie-stat-card warn">
+            <span class="csc-num" id="cscPers">0</span>
+            <span class="csc-lbl">Persistentes</span>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:10px">Supercookies</div>
+        <div id="supercookieList" class="list-container">
+          <div class="empty-state">Nenhum supercookie detectado.</div>
+        </div>
+        <div class="section-title" style="margin-top:10px">Cookie Syncing</div>
+        <div id="cookieSyncList" class="list-container">
+          <div class="empty-state">Nenhuma sincronização detectada.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Storage ── -->
+      <div class="tab-panel" id="tab-storage">
+        <div class="section-title">localStorage</div>
+        <div id="localStorageList" class="list-container">
+          <div class="empty-state">Nenhum dado em localStorage.</div>
+        </div>
+        <div class="section-title" style="margin-top:10px">sessionStorage</div>
+        <div id="sessionStorageList" class="list-container">
+          <div class="empty-state">Nenhum dado em sessionStorage.</div>
+        </div>
+        <div class="section-title" style="margin-top:10px">IndexedDB</div>
+        <div id="indexedDBList" class="list-container">
+          <div class="empty-state">Nenhum banco IndexedDB encontrado.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Fingerprinting ── -->
+      <div class="tab-panel" id="tab-fp">
+        <div class="section-title">Chamadas de API Detectadas</div>
+        <div id="fpList" class="list-container">
+          <div class="empty-state">Nenhuma técnica de fingerprinting detectada.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Hijacking ── -->
+      <div class="tab-panel" id="tab-hijack">
+        <div class="section-title">Scripts Suspeitos</div>
+        <div id="suspiciousScriptList" class="list-container">
+          <div class="empty-state">Nenhum script suspeito detectado.</div>
+        </div>
+        <div class="section-title" style="margin-top:10px">Redirecionamentos</div>
+        <div id="redirectList" class="list-container">
+          <div class="empty-state">Nenhum redirecionamento suspeito.</div>
+        </div>
+        <div class="section-title" style="margin-top:10px">iFrames Externos</div>
+        <div id="iframeList" class="list-container">
+          <div class="empty-state">Nenhum iframe externo detectado.</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Score ── -->
+      <div class="tab-panel" id="tab-score">
+        <div class="section-title">Metodologia — Privacy Score</div>
+        <div class="methodology-text">
+          <p>O score começa em <strong>100</strong> e é descontado com base nos vetores detectados:</p>
+          <ul>
+            <li><span class="pen">−2</span> por domínio de 3ª parte (máx. −20)</li>
+            <li><span class="pen">−5</span> por rastreador conhecido (máx. −20)</li>
+            <li><span class="pen">−3</span> por cookie de 3ª parte (máx. −15)</li>
+            <li><span class="pen">−8</span> por supercookie detectado</li>
+            <li><span class="pen">−15</span> Canvas fingerprinting</li>
+            <li><span class="pen">−15</span> WebGL fingerprinting</li>
+            <li><span class="pen">−10</span> AudioContext fingerprinting</li>
+            <li><span class="pen">−10</span> por script suspeito</li>
+            <li><span class="pen">−10</span> redirecionamento suspeito</li>
+            <li><span class="pen">−5</span> por iframe externo (máx. −15)</li>
+            <li><span class="pen">−10</span> cookie syncing detectado</li>
+          </ul>
+          <p class="grade-guide">
+            <strong>A</strong> ≥80 &nbsp;|&nbsp; <strong>B</strong> ≥60 &nbsp;|&nbsp;
+            <strong>C</strong> ≥40 &nbsp;|&nbsp; <strong>D</strong> ≥20 &nbsp;|&nbsp; <strong>F</strong> &lt;20
+          </p>
+        </div>
+        <div class="section-title" style="margin-top:10px">Penalidades Aplicadas</div>
+        <div id="scoreBreakdown" class="list-container">
+          <div class="empty-state">Nenhuma penalidade ainda.</div>
+        </div>
+      </div>
+
+    </div><!-- /panel -->
+
+    <footer class="footer">
+      <button class="refresh-btn" id="refreshBtn">↻ Atualizar</button>
+      <span class="footer-note">Insper · Roteiro 3</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
