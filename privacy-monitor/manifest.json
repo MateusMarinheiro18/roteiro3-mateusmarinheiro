@@ -12,14 +12,9 @@
     "tabs",
     "storage",
     "activeTab",
+    "webNavigation",
     "<all_urls>"
   ],
-
-  "data_collection_permissions": {
-    "collects_personal_data": false,
-    "data_collection_purpose": "none",
-    "retention_period": "session"
-  },
 
   "background": {
     "scripts": ["privacy_monitor.js"],
