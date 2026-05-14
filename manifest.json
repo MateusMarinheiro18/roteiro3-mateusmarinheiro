@@ -1,0 +1,38 @@
+{
+  "manifest_version": 2,
+  "name": "Privacy Monitor",
+  "version": "1.0.0",
+  "description": "Monitora ameaças de privacidade em páginas web.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "webRequest",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "privacy_monitor.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_action": {
+    "default_title": "Privacy Monitor",
+    "default_popup": "popup/popup.html"
+  },
+  "applications": {
+    "gecko": {
+      "id": "privacy-monitor@roteiro3"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Monitor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Privacy Monitor</h1>
+      <section class="score" aria-live="polite">
+        <div>
+          <span>Privacy Score</span>
+          <strong id="score-value">--</strong>
+        </div>
+        <small id="score-level">Carregando...</small>
+      </section>
+
+      <nav class="tabs" role="tablist">
+        <button class="tab-button active" data-target="third-party" role="tab">Terceiros</button>
+        <button class="tab-button" data-target="cookies" role="tab">Cookies</button>
+        <button class="tab-button" data-target="storage" role="tab">Storage</button>
+        <button class="tab-button" data-target="fingerprinting" role="tab">Fingerprinting</button>
+        <button class="tab-button" data-target="hijacking" role="tab">Hijacking</button>
+      </nav>
+
+      <section id="third-party" class="tab-panel active" role="tabpanel">
+        <ul id="third-party-list"></ul>
+      </section>
+
+      <section id="cookies" class="tab-panel" role="tabpanel">
+        <ul id="cookies-list"></ul>
+      </section>
+
+      <section id="storage" class="tab-panel" role="tabpanel">
+        <ul id="storage-list"></ul>
+      </section>
+
+      <section id="fingerprinting" class="tab-panel" role="tabpanel">
+        <ul id="fingerprinting-list"></ul>
+      </section>
+
+      <section id="hijacking" class="tab-panel" role="tabpanel">
+        <ul id="hijacking-list"></ul>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,83 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 380px;
+  max-width: 380px;
+}
+
+main {
+  padding: 12px;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.score {
+  padding: 10px;
+  border: 1px solid #999;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.score div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+#score-value {
+  font-size: 24px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.tab-button {
+  border: 1px solid #888;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 4px;
+  font-size: 12px;
+}
+
+.tab-button.active {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+}
+
+.tab-panel {
+  display: none;
+  border: 1px solid #999;
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 160px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+li {
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
