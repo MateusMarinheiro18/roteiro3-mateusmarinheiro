@@ -101,13 +101,20 @@ document.addEventListener("DOMContentLoaded", () => {
   
     // Função para solicitar dados ao background script
     function fetchData() {
-      browser.runtime.sendMessage({ type: "GET_TAB_DATA", tabId: null }).then((response) => {
-        if (response.error) {
-          console.error("Erro ao obter dados:", response.error);
-          return;
-        }
-        updatePopup(response);
-      });
+        browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+          const activeTab = tabs[0];
+          const tabId = activeTab.id;
+      
+          console.log(`Obtendo dados para a aba ativa: ${tabId}`);
+      
+          browser.runtime.sendMessage({ type: "GET_TAB_DATA", tabId }).then((response) => {
+            if (response.error) {
+              console.error("Erro ao obter dados:", response.error);
+              return;
+            }
+            updatePopup(response);
+          });
+        });
     }
   
     // Atualizar dados ao clicar no botão de refresh

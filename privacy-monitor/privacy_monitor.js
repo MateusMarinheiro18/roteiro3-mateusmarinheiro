@@ -9,30 +9,31 @@
 const tabData = {};
 
 function initTab(tabId) {
-  tabData[tabId] = {
-    firstPartyDomain: null,
-    thirdPartyDomains: {},   // { domain: { count, types: Set } }
-    cookies: {
-      firstParty: [],
-      thirdParty: [],
-      session: [],
-      persistent: [],
-      supercookies: []
-    },
-    hijacking: {
-      suspiciousScripts: [],
-      redirectAttempts: [],
-      externalIframes: []
-    },
-    fingerprinting: [],      // recebido via message do content_script
-    storage: {               // recebido via message do content_script
-      localStorage: [],
-      sessionStorage: [],
-      indexedDB: []
-    },
-    privacyScore: 100,
-    scoreBreakdown: []
-  };
+    console.log(`Inicializando dados para a aba ${tabId}`);
+    tabData[tabId] = {
+        firstPartyDomain: null,
+        thirdPartyDomains: {},
+        cookies: {
+        firstParty: [],
+        thirdParty: [],
+        session: [],
+        persistent: [],
+        supercookies: []
+        },
+        hijacking: {
+        suspiciousScripts: [],
+        redirectAttempts: [],
+        externalIframes: []
+        },
+        fingerprinting: [],
+        storage: {
+        localStorage: [],
+        sessionStorage: [],
+        indexedDB: []
+        },
+        privacyScore: 100,
+        scoreBreakdown: []
+    };
 }
 
 // ─── Extração de domínio raiz ─────────────────────────────────────────────────
@@ -87,62 +88,42 @@ function isSuspiciousScript(url) {
 
 // ─── Listener principal de requisições ───────────────────────────────────────
 browser.webRequest.onBeforeRequest.addListener(
-  (details) => {
-    const { tabId, url, type, originUrl } = details;
-    if (tabId < 0) return;
-    if (!tabData[tabId]) initTab(tabId);
-
-    const data = tabData[tabId];
-    const reqDomain = extractDomain(url);
-    const originDomain = originUrl ? extractDomain(originUrl) : data.firstPartyDomain;
-
-    // Define o domínio de 1ª parte pela primeira requisição do documento
-    if (type === "main_frame") {
-      data.firstPartyDomain = reqDomain;
-      return;
-    }
-
-    if (!data.firstPartyDomain || !reqDomain) return;
-
-    const isThirdParty = reqDomain !== data.firstPartyDomain;
-
-    if (isThirdParty) {
-      // Registra domínio de terceira parte
-      if (!data.thirdPartyDomains[reqDomain]) {
-        data.thirdPartyDomains[reqDomain] = {
-          count: 0,
-          types: [],
-          isTracker: isKnownTracker(reqDomain),
-          urls: []
-        };
+    (details) => {
+      const { tabId, url, type } = details;
+      if (tabId < 0) return;
+      if (!tabData[tabId]) initTab(tabId);
+  
+      console.log(`Requisição interceptada na aba ${tabId}: ${url} (${type})`);
+  
+      const data = tabData[tabId];
+      const reqDomain = extractDomain(url);
+  
+      if (type === "main_frame") {
+        data.firstPartyDomain = reqDomain;
+        console.log(`Domínio de 1ª parte definido: ${reqDomain}`);
+        return;
       }
-      const entry = data.thirdPartyDomains[reqDomain];
-      entry.count++;
-      if (!entry.types.includes(type)) entry.types.push(type);
-      if (entry.urls.length < 5) entry.urls.push(url);
-    }
-
-    // Detecção de scripts suspeitos (hijacking/hooking)
-    if (type === "script") {
-      if (isSuspiciousScript(url)) {
-        data.hijacking.suspiciousScripts.push({
-          url,
-          domain: reqDomain,
-          isThirdParty,
-          reason: "Padrão suspeito no nome/URL do script"
-        });
+  
+      if (!data.firstPartyDomain || !reqDomain) return;
+  
+      const isThirdParty = reqDomain !== data.firstPartyDomain;
+  
+      if (isThirdParty) {
+        if (!data.thirdPartyDomains[reqDomain]) {
+          data.thirdPartyDomains[reqDomain] = {
+            count: 0,
+            types: [],
+            isTracker: isKnownTracker(reqDomain),
+            urls: []
+          };
+        }
+        const entry = data.thirdPartyDomains[reqDomain];
+        entry.count++;
+        if (!entry.types.includes(type)) entry.types.push(type);
+        if (entry.urls.length < 5) entry.urls.push(url);
       }
-    }
-
-    // iframes externos — potencial clickjacking
-    if (type === "sub_frame" && isThirdParty) {
-      data.hijacking.externalIframes.push({
-        url,
-        domain: reqDomain
-      });
-    }
-  },
-  { urls: ["<all_urls>"] }
+    },
+    { urls: ["<all_urls>"] }
 );
 
 // ─── Listener de headers de resposta (cookies + supercookies) ─────────────────
@@ -280,41 +261,31 @@ browser.webRequest.onBeforeRequest.addListener(
 );
 
 // ─── Receber mensagens do content_script ──────────────────────────────────────
-browser.runtime.onMessage.addListener((message, sender) => {
-  const tabId = sender.tab ? sender.tab.id : null;
-  if (!tabId || tabId < 0) return;
-  if (!tabData[tabId]) initTab(tabId);
-
-  const data = tabData[tabId];
-
-  if (message.type === "FINGERPRINTING_DETECTED") {
-    const existing = data.fingerprinting.find(f => f.api === message.api && f.method === message.method);
-    if (!existing) {
-      data.fingerprinting.push({
-        api: message.api,
-        method: message.method,
-        detail: message.detail,
-        timestamp: Date.now()
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "GET_TAB_DATA") {
+      const tabId = message.tabId;
+      console.log(`Solicitação de dados para a aba ${tabId}`);
+      if (!tabData[tabId]) {
+        console.error(`Nenhum dado encontrado para a aba ${tabId}`);
+        sendResponse({ error: "Nenhum dado para esta aba." });
+        return true;
+      }
+      const data = tabData[tabId];
+      const privacyResult = calculatePrivacyScore(data);
+      sendResponse({
+        firstPartyDomain: data.firstPartyDomain,
+        thirdPartyDomains: data.thirdPartyDomains,
+        cookies: data.cookies,
+        hijacking: data.hijacking,
+        fingerprinting: data.fingerprinting,
+        storage: data.storage,
+        cookieSyncing: data.cookieSyncing || [],
+        privacyScore: privacyResult
       });
+      return true;
     }
-  }
-
-  if (message.type === "STORAGE_DATA") {
-    data.storage.localStorage = message.localStorage || [];
-    data.storage.sessionStorage = message.sessionStorage || [];
-    data.storage.indexedDB = message.indexedDB || [];
-  }
-
-  if (message.type === "HIJACKING_DETECTED") {
-    if (message.subtype === "script_injection") {
-      data.hijacking.suspiciousScripts.push(message.data);
-    }
-    if (message.subtype === "redirect") {
-      data.hijacking.redirectAttempts.push(message.data);
-    }
-  }
-});
-
+  });
+  
 // ─── Calcular Privacy Score ───────────────────────────────────────────────────
 function calculatePrivacyScore(data) {
   let score = 100;
@@ -413,10 +384,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // ─── Limpar dados ao navegar para nova página ─────────────────────────────────
 browser.webNavigation.onCommitted.addListener((details) => {
-  if (details.frameId === 0) {
-    initTab(details.tabId);
-  }
-});
+    if (details.frameId === 0) {
+      console.log(`Navegação detectada na aba ${details.tabId}`);
+      initTab(details.tabId);
+    }
+  });
 
 browser.tabs.onRemoved.addListener((tabId) => {
   delete tabData[tabId];
