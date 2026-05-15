@@ -143,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="item-domain">${item.label}</span>
           <span class="badge badge-danger">${sign}${item.penalty}</span>
         </div>
+        ${item.detail ? `<div class="item-meta">fórmula: ${item.detail}</div>` : ""}
       `;
     }
     // Redirect

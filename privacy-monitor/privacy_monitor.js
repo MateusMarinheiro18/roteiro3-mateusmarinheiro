@@ -288,72 +288,145 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
 // ─── Calcular Privacy Score ───────────────────────────────────────────────────
 function calculatePrivacyScore(data) {
+  // ── Metodologia logarítmica ────────────────────────────────────────────────
+  // Cada categoria tem um peso máximo (teto). A penalidade cresce com log2
+  // para que os primeiros itens pesem mais que os subsequentes.
+  // Isso evita que um site com 45 cookies receba a mesma punição que
+  // ter 5 cookies — a marginal é decrescente.
+  //
+  // Fórmula por categoria:
+  //   penalidade = min(pesoBase × log2(n + 1), teto)
+  //
+  // Pesos calibrados para que um site típico de notícias (UOL, G1) fique ~45–55,
+  // um site de e-commerce moderado fique ~60–70, e um site limpo fique ~85–100.
+  //
+  // Categorias e tetos:
+  //   Domínios 3ª parte   → peso 7,  teto 14  (UOL tem 14 → log2(15)≈3.9 → 7×3.9≈27 → teto 14)
+  //   Rastreadores conhec.→ peso 8,  teto 16
+  //   Cookies 3ª parte    → peso 4,  teto 12
+  //   Supercookies        → peso 6,  teto 12  (raro; penaliza forte)
+  //   Canvas FP           → fixo 10
+  //   WebGL FP            → fixo 10
+  //   AudioContext FP     → fixo 7
+  //   Script suspeito     → fixo 12 por script
+  //   Redirect suspeito   → fixo 8
+  //   iFrames externos    → peso 3,  teto 9
+  //   Cookie syncing      → fixo 8
+
+  const logPenalty = (n, base, cap) =>
+    Math.min(Math.round(base * Math.log2(n + 1)), cap);
+
   let score = 100;
   const breakdown = [];
 
-  // Terceiros
   const thirdPartyCount = Object.keys(data.thirdPartyDomains).length;
-  const trackerCount = Object.values(data.thirdPartyDomains).filter(d => d.isTracker).length;
+  const trackerCount    = Object.values(data.thirdPartyDomains).filter(d => d.isTracker).length;
 
+  // ── Domínios de terceira parte ─────────────────────────────────────────────
   if (thirdPartyCount > 0) {
-    const penalty = Math.min(thirdPartyCount * 2, 20);
+    const penalty = logPenalty(thirdPartyCount, 7, 14);
     score -= penalty;
-    breakdown.push({ label: `${thirdPartyCount} domínios de terceira parte`, penalty: -penalty, category: "third_party" });
+    breakdown.push({
+      label: `${thirdPartyCount} domínios de terceira parte`,
+      penalty: -penalty,
+      detail: `log2(${thirdPartyCount}+1) × 7, teto 14`,
+      category: "third_party"
+    });
   }
+
+  // ── Rastreadores conhecidos ────────────────────────────────────────────────
   if (trackerCount > 0) {
-    const penalty = Math.min(trackerCount * 5, 20);
+    const penalty = logPenalty(trackerCount, 8, 16);
     score -= penalty;
-    breakdown.push({ label: `${trackerCount} rastreadores conhecidos`, penalty: -penalty, category: "tracker" });
+    breakdown.push({
+      label: `${trackerCount} rastreador(es) conhecido(s)`,
+      penalty: -penalty,
+      detail: `log2(${trackerCount}+1) × 8, teto 16`,
+      category: "tracker"
+    });
   }
 
-  // Cookies de terceiros
+  // ── Cookies de terceira parte ──────────────────────────────────────────────
   if (data.cookies.thirdParty.length > 0) {
-    const penalty = Math.min(data.cookies.thirdParty.length * 3, 15);
+    const penalty = logPenalty(data.cookies.thirdParty.length, 4, 12);
     score -= penalty;
-    breakdown.push({ label: `${data.cookies.thirdParty.length} cookies de terceira parte`, penalty: -penalty, category: "cookie" });
+    breakdown.push({
+      label: `${data.cookies.thirdParty.length} cookies de terceira parte`,
+      penalty: -penalty,
+      detail: `log2(${data.cookies.thirdParty.length}+1) × 4, teto 12`,
+      category: "cookie"
+    });
   }
+
+  // ── Supercookies ───────────────────────────────────────────────────────────
   if (data.cookies.supercookies.length > 0) {
-    const penalty = data.cookies.supercookies.length * 8;
+    const penalty = logPenalty(data.cookies.supercookies.length, 6, 12);
     score -= penalty;
-    breakdown.push({ label: `${data.cookies.supercookies.length} supercookies detectados`, penalty: -penalty, category: "supercookie" });
+    breakdown.push({
+      label: `${data.cookies.supercookies.length} supercookie(s) (HSTS/ETag)`,
+      penalty: -penalty,
+      detail: `log2(${data.cookies.supercookies.length}+1) × 6, teto 12`,
+      category: "supercookie"
+    });
   }
 
-  // Fingerprinting
+  // ── Fingerprinting ─────────────────────────────────────────────────────────
   const fpTypes = new Set(data.fingerprinting.map(f => f.api));
-  if (fpTypes.has("Canvas")) { score -= 15; breakdown.push({ label: "Canvas fingerprinting detectado", penalty: -15, category: "fingerprint" }); }
-  if (fpTypes.has("WebGL")) { score -= 15; breakdown.push({ label: "WebGL fingerprinting detectado", penalty: -15, category: "fingerprint" }); }
-  if (fpTypes.has("AudioContext")) { score -= 10; breakdown.push({ label: "AudioContext fingerprinting detectado", penalty: -10, category: "fingerprint" }); }
+  if (fpTypes.has("Canvas")) {
+    score -= 10;
+    breakdown.push({ label: "Canvas fingerprinting detectado", penalty: -10, detail: "fixo", category: "fingerprint" });
+  }
+  if (fpTypes.has("WebGL")) {
+    score -= 10;
+    breakdown.push({ label: "WebGL fingerprinting detectado", penalty: -10, detail: "fixo", category: "fingerprint" });
+  }
+  if (fpTypes.has("AudioContext")) {
+    score -= 7;
+    breakdown.push({ label: "AudioContext fingerprinting detectado", penalty: -7, detail: "fixo", category: "fingerprint" });
+  }
 
-  // Hijacking
+  // ── Hijacking ──────────────────────────────────────────────────────────────
   if (data.hijacking.suspiciousScripts.length > 0) {
-    const penalty = data.hijacking.suspiciousScripts.length * 10;
+    const penalty = Math.min(data.hijacking.suspiciousScripts.length * 12, 24);
     score -= penalty;
-    breakdown.push({ label: `${data.hijacking.suspiciousScripts.length} script(s) suspeito(s)`, penalty: -penalty, category: "hijack" });
+    breakdown.push({
+      label: `${data.hijacking.suspiciousScripts.length} script(s) suspeito(s)`,
+      penalty: -penalty, detail: "12 por script, teto 24", category: "hijack"
+    });
   }
   if (data.hijacking.redirectAttempts.length > 0) {
-    score -= 10;
-    breakdown.push({ label: `${data.hijacking.redirectAttempts.length} redirecionamento(s) suspeito(s)`, penalty: -10, category: "hijack" });
+    score -= 8;
+    breakdown.push({
+      label: `${data.hijacking.redirectAttempts.length} redirecionamento(s) suspeito(s)`,
+      penalty: -8, detail: "fixo", category: "hijack"
+    });
   }
   if (data.hijacking.externalIframes.length > 0) {
-    const penalty = Math.min(data.hijacking.externalIframes.length * 5, 15);
+    const penalty = logPenalty(data.hijacking.externalIframes.length, 3, 9);
     score -= penalty;
-    breakdown.push({ label: `${data.hijacking.externalIframes.length} iframe(s) externo(s)`, penalty: -penalty, category: "hijack" });
+    breakdown.push({
+      label: `${data.hijacking.externalIframes.length} iframe(s) externo(s)`,
+      penalty: -penalty, detail: `log2(n+1) × 3, teto 9`, category: "hijack"
+    });
   }
 
-  // Cookie syncing
+  // ── Cookie syncing ─────────────────────────────────────────────────────────
   if (data.cookieSyncing && data.cookieSyncing.length > 0) {
-    score -= 10;
-    breakdown.push({ label: `${data.cookieSyncing.length} possível(is) cookie syncing`, penalty: -10, category: "sync" });
+    score -= 8;
+    breakdown.push({
+      label: `${data.cookieSyncing.length} possível(is) cookie syncing`,
+      penalty: -8, detail: "fixo", category: "sync"
+    });
   }
 
-  score = Math.max(0, score);
+  score = Math.max(0, Math.round(score));
 
   let grade, color;
   if (score >= 80) { grade = "A"; color = "#22c55e"; }
   else if (score >= 60) { grade = "B"; color = "#84cc16"; }
   else if (score >= 40) { grade = "C"; color = "#eab308"; }
   else if (score >= 20) { grade = "D"; color = "#f97316"; }
-  else { grade = "F"; color = "#ef4444"; }
+  else                  { grade = "F"; color = "#ef4444"; }
 
   return { score, grade, color, breakdown };
 }
