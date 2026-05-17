@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hijack:  document.getElementById("statHijack"),
   };
 
-  // chaves DEVEM bater exatamente com data-tab nos botões do HTML
   const panels = {
     third:   document.getElementById("tab-third"),
     cookies: document.getElementById("tab-cookies"),
@@ -24,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const tabs = document.querySelectorAll(".tab");
 
-  // ── Troca de abas ────────────────────────────────────────────────────────
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       const targetTab = tab.dataset.tab;
@@ -38,7 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ── Renderização de listas ────────────────────────────────────────────────
   function updateList(container, items, emptyMessage) {
     if (!container) return;
     container.innerHTML = "";
@@ -53,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (typeof item === "string") {
         div.textContent = item;
       } else {
-        // Renderização amigável por tipo de objeto
         div.innerHTML = formatItem(item);
       }
       container.appendChild(div);
@@ -61,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function formatItem(item) {
-    // Domínio de 3ª parte
     if (item.types && item.count !== undefined) {
       const trackerBadge = item.isTracker
         ? `<span class="badge badge-danger">rastreador</span>`
@@ -74,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta">${item.count} req · ${(item.types || []).join(", ")}</div>
       `;
     }
-    // Fingerprinting
     if (item.api && item.method) {
       return `
         <div class="item-row">
@@ -84,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta">${item.detail || ""}</div>
       `;
     }
-    // Storage
     if (item.key !== undefined) {
       return `
         <div class="item-row">
@@ -94,7 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta preview">${item.preview || ""}</div>
       `;
     }
-    // IndexedDB
     if (item.stores) {
       return `
         <div class="item-row">
@@ -104,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta">${item.stores.join(", ") || "sem stores"}</div>
       `;
     }
-    // Cookie / supercookie / redirect
     if (item.type && item.risk) {
       return `
         <div class="item-row">
@@ -114,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta">${item.risk}</div>
       `;
     }
-    // Cookie syncing
     if (item.params) {
       return `
         <div class="item-row">
@@ -124,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta">${(item.params || []).join(" · ")}</div>
       `;
     }
-    // Script suspeito
     if (item.reason || item.method) {
       return `
         <div class="item-row">
@@ -135,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta preview">${(item.url || "").substring(0, 80)}</div>
       `;
     }
-    // Score breakdown
     if (item.label && item.penalty !== undefined) {
       const sign = item.penalty <= 0 ? "" : "+";
       return `
@@ -146,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ${item.detail ? `<div class="item-meta">fórmula: ${item.detail}</div>` : ""}
       `;
     }
-    // Redirect
     if (item.from || item.to) {
       return `
         <div class="item-row">
@@ -156,7 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="item-meta preview">${(item.to || "").substring(0, 80)}</div>
       `;
     }
-    // iframe externo
     if (item.url && item.domain) {
       return `
         <div class="item-row">
@@ -166,27 +152,21 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
-    // fallback genérico
     return `<pre class="item-meta">${JSON.stringify(item, null, 2)}</pre>`;
   }
 
-  // ── Atualizar UI com os dados recebidos ───────────────────────────────────
   function updatePopup(data) {
     const ps = data.privacyScore;
 
-    // Score
     scoreNum.textContent = ps.score;
     scoreGrade.textContent = `Nota ${ps.grade}`;
     scoreBarFill.style.width = `${ps.score}%`;
     scoreBarFill.style.backgroundColor = ps.color;
 
-    // Cor do score-num
     scoreNum.style.color = ps.color;
 
-    // Domínio
     domainLabel.textContent = data.firstPartyDomain || "—";
 
-    // Quick stats
     const thirdCount = Object.keys(data.thirdPartyDomains).length;
     const cookieCount = data.cookies.thirdParty.length;
     const fpCount = data.fingerprinting.length;
@@ -197,19 +177,16 @@ document.addEventListener("DOMContentLoaded", () => {
     quickStats.fp.querySelector(".stat-num").textContent      = fpCount;
     quickStats.hijack.querySelector(".stat-num").textContent  = hijackCount;
 
-    // Colorir pills com perigo
     colorPill(quickStats.third,   thirdCount > 5);
     colorPill(quickStats.cookies, cookieCount > 0);
     colorPill(quickStats.fp,      fpCount > 0);
     colorPill(quickStats.hijack,  hijackCount > 0);
 
-    // ── Tab Terceiros ──
     const thirdPartyArr = Object.entries(data.thirdPartyDomains).map(([domain, info]) => ({
       domain, ...info
     }));
     updateList(document.getElementById("thirdPartyList"), thirdPartyArr, "Nenhum domínio de 3ª parte detectado.");
 
-    // ── Tab Cookies ──
     document.getElementById("csc1p").textContent   = data.cookies.firstParty.length;
     document.getElementById("csc3p").textContent   = data.cookies.thirdParty.length;
     document.getElementById("cscSess").textContent = data.cookies.session.length;
@@ -217,20 +194,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateList(document.getElementById("supercookieList"), data.cookies.supercookies, "Nenhum supercookie detectado.");
     updateList(document.getElementById("cookieSyncList"), data.cookieSyncing, "Nenhuma sincronização detectada.");
 
-    // ── Tab Storage ──
     updateList(document.getElementById("localStorageList"),   data.storage.localStorage,  "Nenhum dado em localStorage.");
     updateList(document.getElementById("sessionStorageList"), data.storage.sessionStorage, "Nenhum dado em sessionStorage.");
     updateList(document.getElementById("indexedDBList"),      data.storage.indexedDB,      "Nenhum banco IndexedDB encontrado.");
 
-    // ── Tab Fingerprint ──
     updateList(document.getElementById("fpList"), data.fingerprinting, "Nenhuma técnica de fingerprinting detectada.");
 
-    // ── Tab Hijacking ──
     updateList(document.getElementById("suspiciousScriptList"), data.hijacking.suspiciousScripts, "Nenhum script suspeito detectado.");
     updateList(document.getElementById("redirectList"),         data.hijacking.redirectAttempts,  "Nenhum redirecionamento suspeito.");
     updateList(document.getElementById("iframeList"),           data.hijacking.externalIframes,   "Nenhum iframe externo detectado.");
 
-    // ── Tab Score ──
     updateList(document.getElementById("scoreBreakdown"), ps.breakdown, "Nenhuma penalidade aplicada.");
   }
 
@@ -239,7 +212,6 @@ document.addEventListener("DOMContentLoaded", () => {
     el.querySelector(".stat-num").style.color = isDanger ? "var(--red)" : "var(--text)";
   }
 
-  // ── Buscar dados do background ────────────────────────────────────────────
   function fetchData() {
     refreshBtn.textContent = "↻ …";
     browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {

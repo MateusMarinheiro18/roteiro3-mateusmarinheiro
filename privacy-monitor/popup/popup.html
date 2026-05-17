@@ -11,7 +11,6 @@
 <body>
   <div class="shell">
 
-    <!-- Header -->
     <header class="header">
       <div class="header-left">
         <div class="logo">
@@ -33,7 +32,6 @@
       </div>
     </header>
 
-    <!-- Score bar -->
     <div class="score-bar-wrap">
       <div class="score-bar-track">
         <div class="score-bar-fill" id="scoreBarFill"></div>
@@ -43,7 +41,6 @@
       </div>
     </div>
 
-    <!-- Breakdown rápido -->
     <div class="quick-stats" id="quickStats">
       <div class="stat-pill" id="statThird"><span class="stat-num">—</span><span class="stat-lbl">3ª parte</span></div>
       <div class="stat-pill" id="statCookies"><span class="stat-num">—</span><span class="stat-lbl">Cookies</span></div>
@@ -51,7 +48,6 @@
       <div class="stat-pill" id="statHijack"><span class="stat-num">—</span><span class="stat-lbl">Hijacking</span></div>
     </div>
 
-    <!-- Tabs -->
     <nav class="tabs" role="tablist">
       <button class="tab active" data-tab="third" role="tab">Terceiros</button>
       <button class="tab" data-tab="cookies" role="tab">Cookies</button>
@@ -61,10 +57,8 @@
       <button class="tab" data-tab="score" role="tab">Score</button>
     </nav>
 
-    <!-- Painel de conteúdo -->
     <div class="panel" id="panel">
 
-      <!-- ── Tab: Terceiros ── -->
       <div class="tab-panel active" id="tab-third">
         <div class="section-title">Domínios de Terceira Parte</div>
         <div id="thirdPartyList" class="list-container">
@@ -72,7 +66,6 @@
         </div>
       </div>
 
-      <!-- ── Tab: Cookies ── -->
       <div class="tab-panel" id="tab-cookies">
         <div class="cookie-grid" id="cookieGrid">
           <div class="cookie-stat-card">
@@ -102,7 +95,6 @@
         </div>
       </div>
 
-      <!-- ── Tab: Storage ── -->
       <div class="tab-panel" id="tab-storage">
         <div class="section-title">localStorage</div>
         <div id="localStorageList" class="list-container">
@@ -118,7 +110,6 @@
         </div>
       </div>
 
-      <!-- ── Tab: Fingerprinting ── -->
       <div class="tab-panel" id="tab-fp">
         <div class="section-title">Chamadas de API Detectadas</div>
         <div id="fpList" class="list-container">
@@ -126,7 +117,6 @@
         </div>
       </div>
 
-      <!-- ── Tab: Hijacking ── -->
       <div class="tab-panel" id="tab-hijack">
         <div class="section-title">Scripts Suspeitos</div>
         <div id="suspiciousScriptList" class="list-container">
@@ -142,7 +132,6 @@
         </div>
       </div>
 
-      <!-- ── Tab: Score ── -->
       <div class="tab-panel" id="tab-score">
         <div class="section-title">Metodologia — Privacy Score</div>
         <div class="methodology-text">
@@ -171,7 +160,7 @@
         </div>
       </div>
 
-    </div><!-- /panel -->
+    </div>
 
     <footer class="footer">
       <button class="refresh-btn" id="refreshBtn">↻ Atualizar</button>

@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap');
 
-/* ── Variáveis ────────────────────────────────────────────────────────────── */
 :root {
   --bg:        #0d0f14;
   --surface:   #141720;
@@ -18,7 +17,6 @@
   --display:   'Syne', sans-serif;
 }
 
-/* ── Reset ────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -32,14 +30,12 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Shell ────────────────────────────────────────────────────────────────── */
 .shell {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-/* ── Header ───────────────────────────────────────────────────────────────── */
 .header {
   display: flex;
   justify-content: space-between;
@@ -92,7 +88,6 @@ body {
   white-space: nowrap;
 }
 
-/* Score badge no header */
 .score-badge {
   display: flex;
   flex-direction: column;
@@ -115,7 +110,6 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* ── Score bar ────────────────────────────────────────────────────────────── */
 .score-bar-wrap {
   padding: 10px 16px 6px;
   background: var(--surface);
@@ -146,7 +140,6 @@ body {
   letter-spacing: 0.04em;
 }
 
-/* ── Quick stats ──────────────────────────────────────────────────────────── */
 .quick-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -181,7 +174,6 @@ body {
   text-transform: uppercase;
 }
 
-/* ── Tabs ─────────────────────────────────────────────────────────────────── */
 .tabs {
   display: flex;
   background: var(--surface);
@@ -217,7 +209,6 @@ body {
   border-bottom-color: var(--red);
 }
 
-/* ── Painel principal ─────────────────────────────────────────────────────── */
 .panel {
   flex: 1;
   overflow-y: auto;
@@ -229,7 +220,6 @@ body {
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* ── Títulos de seção ─────────────────────────────────────────────────────── */
 .section-title {
   font-size: 9px;
   font-weight: 700;
@@ -240,7 +230,6 @@ body {
   padding-left: 2px;
 }
 
-/* ── Listas ───────────────────────────────────────────────────────────────── */
 .list-container {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -290,7 +279,6 @@ body {
   font-style: italic;
 }
 
-/* ── Badges ───────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -322,7 +310,6 @@ body {
   border: 1px solid rgba(245,158,11,0.3);
 }
 
-/* ── Tab Cookies: grid de cards ──────────────────────────────────────────── */
 .cookie-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -362,7 +349,6 @@ body {
   color: var(--text-muted);
 }
 
-/* ── Tab Score: metodologia ───────────────────────────────────────────────── */
 .methodology-text {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -408,7 +394,6 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* ── Footer ───────────────────────────────────────────────────────────────── */
 .footer {
   display: flex;
   justify-content: space-between;
@@ -442,7 +427,6 @@ body {
   letter-spacing: 0.06em;
 }
 
-/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
